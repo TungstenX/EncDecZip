@@ -13,6 +13,22 @@ import java.util.logging.Level;
  */
 public class StaticOut {
     
+    
+    private static void addVersion(StringBuilder sbInOut, int startOffSet, int end) {
+        for(int i = 0; i < startOffSet; i++) {
+            sbInOut.append(" ");
+        }
+        sbInOut.append("|");
+        
+        int startVer = end - 2 - EncDecZip.VER.length();
+        if((startVer > 0) && (startVer >= startOffSet + 1)) {
+            for(int i = startOffSet + 1; i < startVer - 1; i++) {
+                sbInOut.append(" ");
+            }
+        }
+        sbInOut.append("v").append(EncDecZip.VER).append(" |\n");        
+    }
+    
     public static void PrintStart() {
         if(EncDecZip.LOG.isLoggable(Level.INFO)) {
             StringBuilder sb = new StringBuilder("\n");
@@ -31,11 +47,13 @@ public class StaticOut {
             sb.append("                            |   /   EncDecZip  \\   |\n");
             sb.append("                            |   +---___  ___---+   |\n");
             sb.append("                            |          \\/          |\n");
-            sb.append("                            |               v0.1.0 |\n");
+            addVersion(sb,28, 52);
             sb.append("                            +----------------------'\n");
+            //         0123456789012345678901234567890123456789012345678901
             EncDecZip.LOG.log(Level.INFO, sb.toString());
         }
     }
+    
        
     public static void PrintUsage() {
         StringBuilder sb = new StringBuilder("\n");
@@ -57,6 +75,8 @@ public class StaticOut {
         sb.append("|   -pg             : Generate a password file                                 |\n");
         sb.append("|   -in path        : The input file or directory, needed for zip or unzip     |\n");  
         sb.append("|   -out path       : [MANDATORY] The out put file or directory                |\n");
+        addVersion(sb, 0, 80);
+        sb.append("|                                                                              |\n");
         sb.append("+------------------------------------------------------------------------------'");
         
         EncDecZip.LOG.log(Level.WARNING, sb.toString());
@@ -94,7 +114,7 @@ public class StaticOut {
         sb.append("|                                  subdirectories will be included reclusively |\n"); 
         sb.append("|                                  Wildcard characters * or ? can be used but  |\n"); 
         sb.append("|                                  subdirectories will not be traverse.        |\n");
-        sb.append("|                                  Put path in \"\" when usinf wildcards       |\n");         
+        sb.append("|                                  Put path in \"\" when usinf wildcards         |\n");         
         sb.append("|                       Unzipping: It must be a path to a file.  The file name |\n");        
         sb.append("|                                  must start with '_'                         |\n");        
         sb.append("|   -out path       : [MANDATORY] The output file or directory.                |\n");
@@ -110,6 +130,9 @@ public class StaticOut {
         sb.append("|                                                                              |\n");
         sb.append("|   Thank you for choosing EncDecZip, we hope you enjoy it.                    |\n");
         sb.append("|                                                    www.ParanoidAndroid.co.za |\n");
+        sb.append("|                                      source @ github.com/TungstenX/EncDecZip |\n");
+        addVersion(sb, 0, 80);
+        sb.append("|                                                                              |\n");
         sb.append("+------------------------------------------------------------------------------'");
 
         EncDecZip.LOG.log(Level.INFO, sb.toString());

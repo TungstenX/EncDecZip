@@ -40,6 +40,7 @@ import za.co.pas.encdeczip.logging.MyLogFormatter;
  */
 public class EncDecZip {
     public static final Logger LOG = Logger.getLogger(EncDecZip.class.getName());
+    public static final String VER = "0.1.1";
     private static final Random random = new Random(System.nanoTime());
     private static final Map<String, Level> LOG_LEVEL = new TreeMap<>();
     private static final ConsoleHandler LOG_HANDLER = new ConsoleHandler();
@@ -221,8 +222,6 @@ public class EncDecZip {
             LOG.log(Level.FINE, "o.O");
         }
     }
-    
-    
     
     /**
      * Get the character associated with the password index. 
