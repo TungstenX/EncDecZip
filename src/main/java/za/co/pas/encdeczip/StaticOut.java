@@ -14,22 +14,22 @@ import java.util.logging.Level;
 public class StaticOut {
     
     
-    private static void addVersion(StringBuilder sbInOut, int startOffSet, int end) {
+    private static void addVersion(String ver, StringBuilder sbInOut, int startOffSet, int end) {
         for(int i = 0; i < startOffSet; i++) {
             sbInOut.append(" ");
         }
         sbInOut.append("|");
         
-        int startVer = end - 2 - EncDecZip.VER.length();
+        int startVer = end - 2 - ver.length();
         if((startVer > 0) && (startVer >= startOffSet + 1)) {
             for(int i = startOffSet + 1; i < startVer - 1; i++) {
                 sbInOut.append(" ");
             }
         }
-        sbInOut.append("v").append(EncDecZip.VER).append(" |\n");        
+        sbInOut.append("v").append(ver).append(" |\n");        
     }
     
-    public static void PrintStart() {
+    public static void PrintStart(String version) {
         if(EncDecZip.LOG.isLoggable(Level.INFO)) {
             StringBuilder sb = new StringBuilder("\n");
             sb.append("                                ____  ____  ____    \n");  
@@ -47,7 +47,7 @@ public class StaticOut {
             sb.append("                            |   /   EncDecZip  \\   |\n");
             sb.append("                            |   +---___  ___---+   |\n");
             sb.append("                            |          \\/          |\n");
-            addVersion(sb,28, 52);
+            addVersion(version, sb, 28, 52);
             sb.append("                            +----------------------'\n");
             //         0123456789012345678901234567890123456789012345678901
             EncDecZip.LOG.log(Level.INFO, sb.toString());
@@ -55,7 +55,7 @@ public class StaticOut {
     }
     
        
-    public static void PrintUsage() {
+    public static void PrintUsage(String version) {
         StringBuilder sb = new StringBuilder("\n");
         sb.append("              ____  _  _  ___  ____  ____  ___  ____  ____  ____               \n");
         sb.append("             ( ___)( \\( )/ __)(  _ \\( ___)/ __)(_   )(_  _)(  _ \\              \n");
@@ -75,14 +75,14 @@ public class StaticOut {
         sb.append("|   -pg             : Generate a password file                                 |\n");
         sb.append("|   -in path        : The input file or directory, needed for zip or unzip     |\n");  
         sb.append("|   -out path       : [MANDATORY] The out put file or directory                |\n");
-        addVersion(sb, 0, 80);
+        addVersion(version, sb, 0, 80);
         sb.append("|                                                                              |\n");
         sb.append("+------------------------------------------------------------------------------'");
         
         EncDecZip.LOG.log(Level.WARNING, sb.toString());
     }
     
-    public static void PrintHelp() {
+    public static void PrintHelp(String version) {
         StringBuilder sb = new StringBuilder("\n");
         sb.append("              ____  _  _  ___  ____  ____  ___  ____  ____  ____               \n");
         sb.append("             ( ___)( \\( )/ __)(  _ \\( ___)/ __)(_   )(_  _)(  _ \\              \n");
@@ -131,7 +131,7 @@ public class StaticOut {
         sb.append("|   Thank you for choosing EncDecZip, we hope you enjoy it.                    |\n");
         sb.append("|                                                    www.ParanoidAndroid.co.za |\n");
         sb.append("|                                      source @ github.com/TungstenX/EncDecZip |\n");
-        addVersion(sb, 0, 80);
+        addVersion(version, sb, 0, 80);
         sb.append("|                                                                              |\n");
         sb.append("+------------------------------------------------------------------------------'");
 

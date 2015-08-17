@@ -29,6 +29,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.Period;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
+import za.co.pas.encdeczip.exception.ProcessingException;
 import za.co.pas.encdeczip.gen.GenPasswords;
 import za.co.pas.encdeczip.logging.MyLogFormatter;
 
@@ -40,7 +44,6 @@ import za.co.pas.encdeczip.logging.MyLogFormatter;
  */
 public class EncDecZip {
     public static final Logger LOG = Logger.getLogger(EncDecZip.class.getName());
-    public static final String VER = "0.1.1";
     private static final Random random = new Random(System.nanoTime());
     private static final Map<String, Level> LOG_LEVEL = new TreeMap<>();
     private static final ConsoleHandler LOG_HANDLER = new ConsoleHandler();
@@ -74,10 +77,25 @@ public class EncDecZip {
      * @param args 
      */
     public static void main(String[] args) {
+        EncDecZip edz = new EncDecZip();
+        try{
+            edz.process(args);
+        }catch(ProcessingException e) {
+            LOG.log(e.getLogingLevel(), e.getMessage());
+            if(e.isPrintUsage()) {
+                StaticOut.PrintUsage(edz.getClass().getPackage().getImplementationVersion());
+            }
+            if((e.getLogingLevel() == Level.SEVERE) || (e.getLogingLevel() == Level.WARNING)) {
+                System.exit(-1);
+            }
+        }
+    }
+    
+    public EncDecZip(){}
+    
+    public void process(String[] args) throws ProcessingException {
         if(args.length == 0) {
-            LOG.log(Level.WARNING, "No parameters supplied");
-            StaticOut.PrintUsage();
-            System.exit(-1);
+            throw new ProcessingException(Level.WARNING, "No parameters supplied", true);            
         }
         
         ACTION action = ACTION.NONE;
@@ -91,9 +109,8 @@ public class EncDecZip {
             if(args[i].startsWith("-")) {
                 switch(args[i]) {
                     case "-h":
-                        StaticOut.PrintHelp();
-                        System.exit(0);
-                        break;
+                        StaticOut.PrintHelp(getClass().getPackage().getImplementationVersion());
+                        return;
                     case "-u":
                         action = ACTION.UNZIP;
                         break;                    
@@ -113,9 +130,7 @@ public class EncDecZip {
                                 LOG.log(Level.INFO, "Level value must be one of: ERROR, WARNING, INFO or VERBOSE");
                             }                            
                         } else {
-                            LOG.log(Level.WARNING, "Need a level value");
-                            StaticOut.PrintUsage();
-                            System.exit(-1);
+                            throw new ProcessingException(Level.WARNING, "Need a level value", true);
                         }
                         break;
                     case "-p":
@@ -124,9 +139,7 @@ public class EncDecZip {
                         if(i < args.length) {
                             password = args[i]; 
                         } else {
-                            LOG.log(Level.WARNING, "Need a password");
-                            StaticOut.PrintUsage();
-                            System.exit(-1);
+                            throw new ProcessingException(Level.WARNING, "Need a password", true);
                         }
                         break;
                     case "-pf":
@@ -135,9 +148,7 @@ public class EncDecZip {
                         if(i < args.length) {
                             password = args[i]; 
                         } else {
-                            LOG.log(Level.WARNING, "Need a path to the password file");
-                            StaticOut.PrintUsage();
-                            System.exit(-1);
+                            throw new ProcessingException(Level.WARNING, "Need a path to the password file", true);
                         }
                         break;
                     case "-in":
@@ -145,9 +156,7 @@ public class EncDecZip {
                         if(i < args.length) {
                             inFilePath = args[i]; 
                         } else {
-                            LOG.log(Level.WARNING, "Need an 'in' path");
-                            StaticOut.PrintUsage();
-                            System.exit(-1);
+                            throw new ProcessingException(Level.WARNING, "Need an 'in' path", true);
                         }
                         break;
                     case "-out":
@@ -155,28 +164,22 @@ public class EncDecZip {
                         if(i < args.length) {
                             outFilePath = args[i]; 
                         } else {
-                            LOG.log(Level.WARNING, "Need an 'out' path");
-                            StaticOut.PrintUsage();
-                            System.exit(-1);
+                            throw new ProcessingException(Level.WARNING, "Need an 'out' path", true);
                         }
                         break;
                 }
             } else {
                 StringBuilder sbLog = new StringBuilder("Unknown parameter: ");
                 sbLog.append(args[i]);
-                LOG.log(Level.WARNING, sbLog.toString());
-                StaticOut.PrintUsage();
-                System.exit(-1);
+                throw new ProcessingException(Level.WARNING, sbLog.toString(), true);
             }
         }
         
         if(StringUtils.isBlank(outFilePath)) {
-            LOG.log(Level.WARNING, "Needs an out file/folder path");
-            StaticOut.PrintUsage();
-            System.exit(-1);
+            throw new ProcessingException(Level.WARNING, "Needs an out file/folder path", true);
         }
         
-        StaticOut.PrintStart();        
+        StaticOut.PrintStart(getClass().getPackage().getImplementationVersion());        
         switch(action) {
             case NONE:
                 if(LOG.isLoggable(Level.FINE)) {
@@ -185,9 +188,7 @@ public class EncDecZip {
                 if(option == OPTION.PASSWORD_GEN) {
                     GenPasswords.Gen(outFilePath);
                 } else {
-                    LOG.log(Level.WARNING, "No action specified, i.e. -z or -u");                    
-                    StaticOut.PrintUsage();
-                    System.exit(-1);
+                    throw new ProcessingException(Level.WARNING, "No action specified, i.e. -z or -u", true);
                 }                
                 break;
             case ZIP:
@@ -195,12 +196,12 @@ public class EncDecZip {
                     LOG.log(Level.FINE, "About to add files to zip file");
                 }
                 try{
-                    AddFilesWithAESEncryption(option == OPTION.PASSWORD, 
+                    addFilesWithAESEncryption(option == OPTION.PASSWORD, 
                                               password,
                                               inFilePath,
                                               outFilePath);
                 } catch(Exception e) {
-                    LOG.log(Level.SEVERE, e.getMessage());
+                    throw new ProcessingException(Level.SEVERE, e.getMessage());
                 }
                 break;
             case UNZIP:                
@@ -208,11 +209,11 @@ public class EncDecZip {
                     LOG.log(Level.FINE, "About to extract files from zip file");
                 }
                 try{
-                    ExtractAllFiles(option == OPTION.PASSWORD, password, 
+                    extractAllFiles(option == OPTION.PASSWORD, password, 
                                     inFilePath,
                                     outFilePath);
                 } catch(Exception e) {
-                    LOG.log(Level.SEVERE, e.getMessage());
+                    throw new ProcessingException(Level.SEVERE, e.getMessage());
                 }
                 break;
         }
@@ -231,7 +232,7 @@ public class EncDecZip {
      * @param index
      * @return the associated character
      */
-    private static char GetPasswordIndexAsLetter(int index) {
+    private char getPasswordIndexAsLetter(int index) {
         if(index <= 9) { //0-9
             return (char)(index + 48);
         } else if((index >= 10) && (index <= 35)) { //A-Z
@@ -250,7 +251,7 @@ public class EncDecZip {
      * @param c character 0-9, A-Z or a-z
      * @return the password index, between 0 and 61
      */
-    private static int GetPasswordIndexFromLetter(char c) {
+    private int getPasswordIndexFromLetter(char c) {
         if((c >= '0') && (c <= '9')) { //0-9
             return (int)(c - 48);
         } else if((c >= 'A') && (c <= 'Z')) { //10-35
@@ -267,7 +268,7 @@ public class EncDecZip {
      * @param file the password file
      * @return an array of characters that is the password
      */
-    private static char[] GetPassword(int index, File file) {        
+    private char[] getPassword(int index, File file) {        
         List<String> passwords = new ArrayList<>();
         try(BufferedReader br = new BufferedReader(new FileReader(file))){
             String sCurrentLine;
@@ -295,7 +296,7 @@ public class EncDecZip {
     /**
      * An inner class for data management
      */
-    private static class FileData {
+    private class FileData {
         Map<String, File> fileList = new TreeMap<>();
         private long currentIndex = 0L;
     }
@@ -305,7 +306,7 @@ public class EncDecZip {
      * @param l
      * @return the a file name in the dos 8.3 format 
      */
-    private static String makeFileName(long l) {
+    private String makeFileName(long l) {
         StringBuilder sb = new StringBuilder(Long.toHexString(l));
         while(sb.length() < 11) {
             sb.insert(0, "0");
@@ -326,7 +327,7 @@ public class EncDecZip {
      * @param inputPath
      * @return 
      */
-    private static FileData prepareFilesToBeZipped(FileData fileData, String inputPath) {
+    private FileData prepareFilesToBeZipped(FileData fileData, String inputPath) {
         if(LOG.isLoggable(Level.FINE)) {
             StringBuilder sbLog = new StringBuilder("Path: ");
             sbLog.append(inputPath);
@@ -367,7 +368,7 @@ public class EncDecZip {
         return fileData;
     } 
     
-    private static FileData prepareWildcardFilesToBeZipped(FileData fileData, String inputPath) {
+    private FileData prepareWildcardFilesToBeZipped(FileData fileData, String inputPath) {
         if(LOG.isLoggable(Level.FINE)) {
             StringBuilder sbLog = new StringBuilder("Wild card search path: ");
             sbLog.append(inputPath);
@@ -415,10 +416,10 @@ public class EncDecZip {
      * @return
      * @throws Exception 
      */
-    private static char[] makeZipFileName(boolean usePassword, 
-                                          String passwordOrPath, 
-                                          String zipName, 
-                                          StringBuilder zipFilePathOut) throws Exception {
+    private char[] makeZipFileName(boolean usePassword, 
+                                   String passwordOrPath, 
+                                   String zipName, 
+                                   StringBuilder zipFilePathOut) throws Exception {
         //Create the zip file name
            
         StringBuilder zipFilePath = new StringBuilder();
@@ -486,11 +487,11 @@ public class EncDecZip {
             }
             if(passwordFile.exists()) {
                 int passwordIndex = random.nextInt(62);
-                password = GetPassword(passwordIndex, passwordFile);
+                password = getPassword(passwordIndex, passwordFile);
                 if(password == null) {
                     throw new Exception("Could not create password");
                 }
-                zipFileName.insert(0, GetPasswordIndexAsLetter(passwordIndex));//the password index character
+                zipFileName.insert(0, getPasswordIndexAsLetter(passwordIndex));//the password index character
             } else {
                 throw new Exception("Could not find password file: " + passwordFile.getAbsolutePath());
             }
@@ -517,7 +518,7 @@ public class EncDecZip {
      * @param filePath
      * @return 
      */
-    private static String trimFilePath(String baseFilePath, String filePath){
+    private String trimFilePath(String baseFilePath, String filePath){
         File base;
         if(baseFilePath.matches(REGEX_WILDCARDS)) {
             // ..\Test*.txt
@@ -554,11 +555,12 @@ public class EncDecZip {
      * @throws Exception 
      */
     @SuppressWarnings("unchecked") 
-    public static void AddFilesWithAESEncryption(boolean usePassword, 
-                                                 String passwordOrPath, 
-                                                 String inFilePath, 
-                                                 String zipName) throws Exception {
+    private void addFilesWithAESEncryption(boolean usePassword, 
+                                          String passwordOrPath, 
+                                          String inFilePath, 
+                                          String zipName) throws Exception {
         try {
+            long addTimeStart = System.currentTimeMillis();
             if(LOG.isLoggable(Level.INFO)) {
                 LOG.log(Level.INFO, "Creating zip file...");
             }
@@ -677,9 +679,12 @@ public class EncDecZip {
                 FileUtils.forceDelete(newFile);
             }
             FileUtils.forceDelete(mapFile);
-            
+                        
             if(LOG.isLoggable(Level.INFO)) {
-                LOG.log(Level.INFO, "...Done");
+                long addTimeEnds = System.currentTimeMillis();
+                StringBuilder sbLog = new StringBuilder("... Zipping files took: ");
+                sbLog.append(calcTimeLaps(addTimeEnds - addTimeStart));
+                LOG.log(Level.INFO, sbLog.toString());
             }
         } catch(ZipException | IOException e) {
             LOG.log(Level.SEVERE, "Error while zipping files", e);
@@ -694,11 +699,12 @@ public class EncDecZip {
      * @param outPath
      * @throws Exception 
      */
-    public static void ExtractAllFiles(boolean usePassword, 
-                                       String passwordOrPath, 
-                                       String zipFilePath, 
-                                       String outPath) throws Exception {
+    private void extractAllFiles(boolean usePassword, 
+                                 String passwordOrPath, 
+                                 String zipFilePath, 
+                                 String outPath) throws Exception {
         try {
+            long extraTimeStart = System.currentTimeMillis();
             if(LOG.isLoggable(Level.INFO)) {
                 LOG.log(Level.INFO, "Extracting file(s)...");
             }
@@ -733,8 +739,8 @@ public class EncDecZip {
             } else {
                 File passwordFile = new File(passwordOrPath);
                 if(passwordFile.exists()) {
-                    int passwordIndex = GetPasswordIndexFromLetter(zipFileName.charAt(1));
-                    password = GetPassword(passwordIndex, passwordFile);
+                    int passwordIndex = getPasswordIndexFromLetter(zipFileName.charAt(1));
+                    password = getPassword(passwordIndex, passwordFile);
                     if(password == null) {
                         throw new Exception("Could not create password");
                     }
@@ -799,10 +805,44 @@ public class EncDecZip {
             FileUtils.forceDelete(zipToBeDeleted);
             
             if(LOG.isLoggable(Level.INFO)) {
-                LOG.log(Level.INFO, "...Done");
+                long extraTimeEnds = System.currentTimeMillis();
+                StringBuilder sbLog = new StringBuilder("... Extraction took: ");
+                sbLog.append(calcTimeLaps(extraTimeEnds - extraTimeStart));
+                LOG.log(Level.INFO, sbLog.toString());
             }
         } catch (ZipException | IOException e) {
             LOG.log(Level.SEVERE, "Error while extrating files", e);
         }	
+    }
+    
+    private String calcTimeLaps(long msLeft) {
+        Period period = new Period(msLeft);
+        PeriodFormatter daysHoursMinutes = new PeriodFormatterBuilder()
+                                                .appendYears()
+                                                .appendSuffix(" year", " years")
+                                                .appendSeparator(", ")
+                                                .appendMonths()
+                                                .appendSuffix(" month", " months")
+                                                .appendSeparator(", ")
+                                                .appendWeeks()
+                                                .appendSuffix(" week", " weeks")
+                                                .appendSeparator(", ")
+                                                .appendDays()
+                                                .appendSuffix(" day", " days")
+                                                .appendSeparator(" and ")
+                                                .appendHours()
+                                                .appendSuffix(" hour", " hours")
+                                                .appendSeparator(", ")
+                                                .appendMinutes()
+                                                .appendSuffix(" minute", " minutes")
+                                                .appendSeparator(", ")
+                                                .appendSeconds()
+                                                .appendSuffix(" second", " seconds")
+                                                .appendSeparator(", ")
+                                                .appendMillis()
+                                                .appendSuffix(" millisecond", " milliseconds")
+                                                .toFormatter();
+        String ret = daysHoursMinutes.print(period.normalizedStandard());        
+        return ret;
     }
 }
