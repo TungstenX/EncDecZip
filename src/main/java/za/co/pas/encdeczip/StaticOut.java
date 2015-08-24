@@ -63,9 +63,9 @@ public class StaticOut {
         sb.append("|            (____)(_)\\_)\\___)(____/(____)\\___)(____)(____)(__)                |\n");
         sb.append("| Usage:                                                                       |\n");
         sb.append("|   java -jar EncDecZip [-z | -u] [-l level] [-h]                              |\n");  
-        sb.append("|                       [-p password | -pf passwordFile | -pg] [-in path]      |\n"); 
-        sb.append("|                       -out path                                              |\n");
-        sb.append("|                                                                              |\n");
+        sb.append("|                       {-p password | -pf passwordFile | -pg} [inPath]        |\n"); 
+        sb.append("|                       <outPath>                                              |\n");
+        sb.append("|  Options:                                                                    |\n");
         sb.append("|   -z              : Zip the file or directory, not needed for -pg            |\n");
         sb.append("|   -u              : Unzip the file or directory, not needed for -pg          |\n");
         sb.append("|   -l level        : Log / output level: ERROR, WARNING, INFO, VERBOSE        |\n");
@@ -73,8 +73,9 @@ public class StaticOut {
         sb.append("|   -p password     : The password to encrypt the file                         |\n");
         sb.append("|   -pf passwordFile: The path to the password file                            |\n");
         sb.append("|   -pg             : Generate a password file                                 |\n");
-        sb.append("|   -in path        : The input file or directory, needed for zip or unzip     |\n");  
-        sb.append("|   -out path       : [MANDATORY] The out put file or directory                |\n");
+        sb.append("|  Paths:                                                                      |\n");
+        sb.append("|   inPath          : The input file or directory, needed for zip or unzip     |\n");  
+        sb.append("|   outPath         : MANDATORY - The out put file or directory                |\n");
         addVersion(version, sb, 0, 80);
         sb.append("|                                                                              |\n");
         sb.append("+------------------------------------------------------------------------------'");
@@ -91,9 +92,10 @@ public class StaticOut {
         sb.append("| Help:                                                                        |\n");
         sb.append("| Usage:                                                                       |\n");
         sb.append("|   java -jar EncDecZip [-z | -u] [-l level] [-h]                              |\n");  
-        sb.append("|                       [-p password | -pf passwordFile | -pg] [-in path]      |\n"); 
-        sb.append("|                       -out path                                              |\n");
+        sb.append("|                       {-p password | -pf passwordFile | -pg} [inPath]        |\n"); 
+        sb.append("|                       <outPath>                                              |\n");
         sb.append("|                                                                              |\n");
+        sb.append("|  Options:                                                                    |\n");
         sb.append("|   -z              : Zip the file or directory, not needed for -pg            |\n");
         sb.append("|   -u              : Unzip the file or directory, not needed for -pg          |\n");
         sb.append("|   -l level        : Log / output level:                                      |\n");
@@ -109,7 +111,8 @@ public class StaticOut {
         sb.append("|                     platform issues                                          |\n");
         sb.append("|   -pf passwordFile: The path to the password file (including the file name)  |\n");
         sb.append("|   -pg             : Generate a password file to the output path              |\n");
-        sb.append("|   -in path        : The input file or directory, needed for zip or unzip     |\n");  
+        sb.append("|  Paths:                                                                      |\n");
+        sb.append("|   inPath          : The input file or directory, needed for zip or unzip     |\n");  
         sb.append("|                       Zipping:   If the path is directory then all files and |\n"); 
         sb.append("|                                  subdirectories will be included reclusively |\n"); 
         sb.append("|                                  Wildcard characters * or ? can be used but  |\n"); 
@@ -117,7 +120,7 @@ public class StaticOut {
         sb.append("|                                  Put path in \"\" when usinf wildcards         |\n");         
         sb.append("|                       Unzipping: It must be a path to a file.  The file name |\n");        
         sb.append("|                                  must start with '_'                         |\n");        
-        sb.append("|   -out path       : [MANDATORY] The output file or directory.                |\n");
+        sb.append("|   outPath         : MANDATORY - The output file or directory.                |\n");
         sb.append("|                       Password Gen: If path is to a directory then the file  |\n");
         sb.append("|                                     'Passwords.txt' will be created in that  |\n");
         sb.append("|                                     directory                                |\n");

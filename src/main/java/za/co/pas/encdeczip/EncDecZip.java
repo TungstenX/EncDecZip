@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -151,31 +152,22 @@ public class EncDecZip {
                             throw new ProcessingException(Level.WARNING, "Need a path to the password file", true);
                         }
                         break;
-                    case "-in":
-                        i++;
-                        if(i < args.length) {
-                            inFilePath = args[i]; 
-                        } else {
-                            throw new ProcessingException(Level.WARNING, "Need an 'in' path", true);
-                        }
-                        break;
-                    case "-out":
-                        i++;
-                        if(i < args.length) {
-                            outFilePath = args[i]; 
-                        } else {
-                            throw new ProcessingException(Level.WARNING, "Need an 'out' path", true);
-                        }
-                        break;
+                    default: 
+                        throw new ProcessingException(Level.WARNING, "Unknown parameter: " + args[i], true);
                 }
             } else {
-                StringBuilder sbLog = new StringBuilder("Unknown parameter: ");
-                sbLog.append(args[i]);
-                throw new ProcessingException(Level.WARNING, sbLog.toString(), true);
+                //This is the in and out file/directory now
+                if(inFilePath == null) {
+                    inFilePath = args[i];
+                } else if(outFilePath == null) {
+                    outFilePath = args[i];                     
+                }else {
+                    throw new ProcessingException(Level.WARNING, "Need in and out paths already set", true);
+                }
             }
         }
         
-        if(StringUtils.isBlank(outFilePath)) {
+        if(StringUtils.isBlank(inFilePath)) {
             throw new ProcessingException(Level.WARNING, "Needs an out file/folder path", true);
         }
         
@@ -186,7 +178,7 @@ public class EncDecZip {
                     LOG.log(Level.FINE, "About to generate password file");
                 }
                 if(option == OPTION.PASSWORD_GEN) {
-                    GenPasswords.Gen(outFilePath);
+                    GenPasswords.Gen(inFilePath);
                 } else {
                     throw new ProcessingException(Level.WARNING, "No action specified, i.e. -z or -u", true);
                 }                
@@ -266,20 +258,16 @@ public class EncDecZip {
      * Get the password from the password file
      * @param index is the password index
      * @param file the password file
-     * @return an array of characters that is the password
+     * @return an array of characters that is the password, will not be null
      */
-    private char[] getPassword(int index, File file) {        
+    private char[] getPassword(int index, File file) throws IOException {        
         List<String> passwords = new ArrayList<>();
         try(BufferedReader br = new BufferedReader(new FileReader(file))){
             String sCurrentLine;
             while ((sCurrentLine = br.readLine()) != null) {
                 passwords.add(sCurrentLine);
             }
-        } catch(IOException e) {
-            StringBuilder sbLog = new StringBuilder("Error while reading password file: ");
-            sbLog.append(e.getMessage());
-            LOG.log(Level.SEVERE, sbLog.toString());
-        }
+        } 
         if(!passwords.isEmpty() && (index < passwords.size())) {
             if(LOG.isLoggable(Level.FINE)) {
                 StringBuilder sbLog = new StringBuilder("The password is ");
@@ -288,8 +276,7 @@ public class EncDecZip {
             }            
             return StringEscapeUtils.unescapeJava(passwords.get(index)).toCharArray();
         } else {
-            LOG.log(Level.SEVERE, "Index problem with password file");
-            return null;
+            throw new ArrayIndexOutOfBoundsException("Index problem with password file");
         }        
     }
     
@@ -414,12 +401,12 @@ public class EncDecZip {
      * @param zipName
      * @param zipFilePathOut
      * @return
-     * @throws Exception 
+     * @throws IOException, FileNotFoundException 
      */
     private char[] makeZipFileName(boolean usePassword, 
                                    String passwordOrPath, 
                                    String zipName, 
-                                   StringBuilder zipFilePathOut) throws Exception {
+                                   StringBuilder zipFilePathOut) throws IOException, FileNotFoundException {
         //Create the zip file name
            
         StringBuilder zipFilePath = new StringBuilder();
@@ -450,7 +437,7 @@ public class EncDecZip {
             } else {
                 int pos = temp.getAbsolutePath().lastIndexOf(File.separator);
                 if(pos == -1) {
-                    throw new Exception("Error in zip file path");
+                    throw new FileNotFoundException("Error in zip file path: " + temp.getAbsolutePath());
                 }
                 zipFilePath.append(temp.getAbsolutePath().substring(0, pos + 1));
                 
@@ -488,12 +475,9 @@ public class EncDecZip {
             if(passwordFile.exists()) {
                 int passwordIndex = random.nextInt(62);
                 password = getPassword(passwordIndex, passwordFile);
-                if(password == null) {
-                    throw new Exception("Could not create password");
-                }
                 zipFileName.insert(0, getPasswordIndexAsLetter(passwordIndex));//the password index character
             } else {
-                throw new Exception("Could not find password file: " + passwordFile.getAbsolutePath());
+                throw new FileNotFoundException("Could not find password file: " + passwordFile.getAbsolutePath());
             }
         }            
         zipFileName.insert(0, "_");//the first '_'
@@ -552,13 +536,13 @@ public class EncDecZip {
      * @param passwordOrPath
      * @param inFilePath
      * @param zipName
-     * @throws Exception 
+     * @throws FileNotFoundException 
      */
     @SuppressWarnings("unchecked") 
     private void addFilesWithAESEncryption(boolean usePassword, 
                                           String passwordOrPath, 
                                           String inFilePath, 
-                                          String zipName) throws Exception {
+                                          String zipName) throws FileNotFoundException {
         try {
             long addTimeStart = System.currentTimeMillis();
             if(LOG.isLoggable(Level.INFO)) {
@@ -573,7 +557,7 @@ public class EncDecZip {
             // Objects of type File have to be added to the ArrayList
             // Copy files
             if(System.getProperty("java.io.tmpdir") == null) {
-                throw new Exception("No temp directory found, set up your OS' temp directory or run with -Djava.io.tmpdir=");
+                throw new FileNotFoundException("No temp directory found, set up your OS' temp directory or run with -Djava.io.tmpdir=");
             }
             //Add the files
             //And the files mapping
@@ -615,10 +599,7 @@ public class EncDecZip {
             try (FileOutputStream fos = new FileOutputStream(mapFile);){
                 fos.write(filesMapping.toString().getBytes("UTF-8"));
                 fos.flush();
-            } catch(IOException e) {
-//                LOG.log(Level.SEVERE, "Error writing file mappings file", e);
-                throw e;
-            }
+            } 
             filesToAdd.add(mapFile);
             
             // Initiate Zip Parameters which define various properties such
@@ -697,12 +678,12 @@ public class EncDecZip {
      * @param passwordOrPath
      * @param zipFilePath
      * @param outPath
-     * @throws Exception 
+     * @throws FileNotFoundException 
      */
     private void extractAllFiles(boolean usePassword, 
                                  String passwordOrPath, 
                                  String zipFilePath, 
-                                 String outPath) throws Exception {
+                                 String outPath) throws IOException, FileNotFoundException, MalformedURLException {
         try {
             long extraTimeStart = System.currentTimeMillis();
             if(LOG.isLoggable(Level.INFO)) {
@@ -714,23 +695,23 @@ public class EncDecZip {
             if(!temp.exists()) {
                 throw new FileNotFoundException("File: " + zipFilePath + " not found.");
             } else if(temp.isDirectory()) {
-                throw new Exception("Please supply a file not a directory");
+                throw new FileNotFoundException("Please supply a file not a directory");
             } else if(System.getProperty("java.io.tmpdir") == null) {
-                throw new Exception("No temp directory found, set up your OS' temp directory or run with -Djava.io.tmpdir=");
+                throw new FileNotFoundException("No temp directory found, set up your OS' temp directory or run with -Djava.io.tmpdir=");
             }
             File temp2 = new File(outPath);
             if(temp2.isFile()) {
-                throw new Exception("The output path must be a directory");
+                throw new MalformedURLException("The output path must be a directory");
             }
             Path path = Paths.get(zipFilePath);
             String zipFileName = path.getFileName().toString();
             if(!zipFileName.startsWith("_")) {
-                throw new Exception("Error in zip file name, the zip file name must start with '_'");
+                throw new MalformedURLException("Error in zip file name, the zip file name must start with '_'");
             }        
             if(!usePassword && (zipFileName.charAt(1) == '_')) {
-                throw new Exception("Zip by using a password file.  Please supply path to password file");
+                throw new IllegalArgumentException("Zip by using a password file.  Please supply path to password file");
             } else if(usePassword && (zipFileName.charAt(1) != '_')) {
-                throw new Exception("Zip by using a password.  Please supply a password not path to password file");                
+                throw new IllegalArgumentException("Zip by using a password.  Please supply a password not path to password file");                
             }
             
             char[] password = null;
@@ -741,11 +722,8 @@ public class EncDecZip {
                 if(passwordFile.exists()) {
                     int passwordIndex = getPasswordIndexFromLetter(zipFileName.charAt(1));
                     password = getPassword(passwordIndex, passwordFile);
-                    if(password == null) {
-                        throw new Exception("Could not create password");
-                    }
                 } else {
-                    throw new Exception("Could not find password file: " + passwordOrPath);
+                    throw new FileNotFoundException("Could not find password file: " + passwordOrPath);
                 }
             }
             
@@ -774,9 +752,7 @@ public class EncDecZip {
                 while ((sCurrentLine = br.readLine()) != null) {
                     lines.add(sCurrentLine);
                 }
-            } catch(IOException e) {
-                throw e;
-            }
+            } 
             StringBuilder tmp = new StringBuilder(System.getProperty("java.io.tmpdir"));
             if(!tmp.toString().endsWith(File.separator)) {
                 tmp.append(File.separator);
@@ -788,7 +764,13 @@ public class EncDecZip {
                 File oldFile = new File(tmp.toString() + oldFileName);
                 File newFile = new File(outFilePathBase + newFilePath);
                 FileUtils.copyFile(oldFile, newFile);
-                FileUtils.forceDelete(oldFile);
+                try {
+                    FileUtils.forceDelete(oldFile);
+                } catch(IOException e) {
+                    StringBuilder sbLog = new StringBuilder("Error while deleting file: ");
+                    sbLog.append(oldFile.getAbsolutePath()).append(" : ").append(e);
+                    LOG.log(Level.WARNING, sbLog.toString());                
+                }
              
                 if(LOG.isLoggable(Level.INFO)) {
                     StringBuilder sbLog = new StringBuilder("File: ");
@@ -796,13 +778,25 @@ public class EncDecZip {
                     LOG.log(Level.INFO, sbLog.toString());
                 }
             }
-            FileUtils.forceDelete(mapFile);
+            try {
+                FileUtils.forceDelete(mapFile);
+            } catch(IOException e) {
+                StringBuilder sbLog = new StringBuilder("Error while deleting map file: ");
+                sbLog.append(e);
+                LOG.log(Level.WARNING, sbLog.toString());                
+            }
             
             if(LOG.isLoggable(Level.FINE)) {
                 LOG.log(Level.FINE, "Cleaning up...");
             }
             File zipToBeDeleted = new File(zipFilePath);
-            FileUtils.forceDelete(zipToBeDeleted);
+            try{
+                FileUtils.forceDelete(zipToBeDeleted);
+            } catch(IOException e) {
+                StringBuilder sbLog = new StringBuilder("Error while deleting orginal zip file: ");
+                sbLog.append(e);
+                LOG.log(Level.WARNING, sbLog.toString());                
+            }
             
             if(LOG.isLoggable(Level.INFO)) {
                 long extraTimeEnds = System.currentTimeMillis();
@@ -810,7 +804,7 @@ public class EncDecZip {
                 sbLog.append(calcTimeLaps(extraTimeEnds - extraTimeStart));
                 LOG.log(Level.INFO, sbLog.toString());
             }
-        } catch (ZipException | IOException e) {
+        } catch (ZipException e) {
             LOG.log(Level.SEVERE, "Error while extrating files", e);
         }	
     }
