@@ -546,7 +546,7 @@ public class EncDecZip {
         try {
             long addTimeStart = System.currentTimeMillis();
             if(LOG.isLoggable(Level.INFO)) {
-                LOG.log(Level.INFO, "Creating zip file...");
+                LOG.log(Level.INFO, "Creating zip file");
             }
             StringBuilder zipFilePath = new StringBuilder();
             char[] password = makeZipFileName(usePassword, passwordOrPath, zipName, zipFilePath);
@@ -562,9 +562,7 @@ public class EncDecZip {
             //Add the files
             //And the files mapping
             
-            if(LOG.isLoggable(Level.FINE)) {
-                LOG.log(Level.FINE, "Adding file(s)...");
-            }
+            
             
             StringBuilder filesMapping = new StringBuilder();
             List<File> filesToAdd = new ArrayList();
@@ -574,7 +572,16 @@ public class EncDecZip {
             } else {
                 fileData = prepareFilesToBeZipped(null, inFilePath);                
             }
+            if(LOG.isLoggable(Level.INFO)) {
+                StringBuilder sbLog = new StringBuilder("Adding ");
+                sbLog.append(fileData.fileList.keySet().size()).append(" file");
+                if(fileData.fileList.keySet().isEmpty() || fileData.fileList.keySet().size() > 1) {
+                    sbLog.append("s");
+                }
+                LOG.log(Level.INFO, sbLog.toString());
+            }
             for(String newFileName : fileData.fileList.keySet()) {
+                
                 StringBuilder newFilePath = new StringBuilder(System.getProperty("java.io.tmpdir"));
                 if(!newFilePath.toString().endsWith(File.separator)) {
                     newFilePath.append(File.separator);
@@ -587,8 +594,8 @@ public class EncDecZip {
             }
             //Create map file and add it
             
-            if(LOG.isLoggable(Level.FINE)) {
-                LOG.log(Level.FINE, "Creating mapping file...");
+            if(LOG.isLoggable(Level.INFO)) {
+                LOG.log(Level.INFO, "Creating mapping file");
             }
             StringBuilder mapFilePath = new StringBuilder(System.getProperty("java.io.tmpdir"));
             if(!mapFilePath.toString().endsWith(File.separator)) {
@@ -641,13 +648,13 @@ public class EncDecZip {
             // then this method throws an exception as Zip Format Specification does not 
             // allow updating split zip files
             
-            if(LOG.isLoggable(Level.FINE)) {
-                LOG.log(Level.FINE, "Zipping file(s)...");
+            if(LOG.isLoggable(Level.INFO)) {
+                LOG.log(Level.INFO, "Closing zip file, please wait...");
             }
             zipFile.addFiles((ArrayList<File>)filesToAdd, parameters);
             
-            if(LOG.isLoggable(Level.FINE)) {
-                LOG.log(Level.FINE, "Cleaning up...");
+            if(LOG.isLoggable(Level.INFO)) {
+                LOG.log(Level.INFO, "Cleaning up");
             }
             //Clean up temp files
             for(String newFileName : fileData.fileList.keySet()) {
@@ -663,7 +670,7 @@ public class EncDecZip {
                         
             if(LOG.isLoggable(Level.INFO)) {
                 long addTimeEnds = System.currentTimeMillis();
-                StringBuilder sbLog = new StringBuilder("... Zipping files took: ");
+                StringBuilder sbLog = new StringBuilder("Zipping files took: ");
                 sbLog.append(calcTimeLaps(addTimeEnds - addTimeStart));
                 LOG.log(Level.INFO, sbLog.toString());
             }
