@@ -62,7 +62,7 @@ public class StaticOut {
         sb.append(" _------------)__)--)  (( (__--)(_) ))__)( (__--/ /_--_)(_--)___/--------------+\n");
         sb.append("|            (____)(_)\\_)\\___)(____/(____)\\___)(____)(____)(__)                |\n");
         sb.append("| Usage:                                                                       |\n");
-        sb.append("|   java -jar EncDecZip [-z | -u] [-l level] [-h]                              |\n");  
+        sb.append("|   java -jar EncDecZip [-z | -u] [-l level] [-h] [-o text]                    |\n");  
         sb.append("|                       {-p password | -pf passwordFile | -pg} [inPath]        |\n"); 
         sb.append("|                       <outPath>                                              |\n");
         sb.append("|  Options:                                                                    |\n");
@@ -70,6 +70,7 @@ public class StaticOut {
         sb.append("|   -u              : Unzip the file or directory, not needed for -pg          |\n");
         sb.append("|   -l level        : Log / output level: ERROR, WARNING, INFO, VERBOSE        |\n");
         sb.append("|   -h              : Help                                                     |\n");
+        sb.append("|   -o              : Output text before filename, e.g. http://download.from/  |\n");
         sb.append("|   -p password     : The password to encrypt the file                         |\n");
         sb.append("|   -pf passwordFile: The path to the password file                            |\n");
         sb.append("|   -pg             : Generate a password file                                 |\n");

@@ -52,6 +52,7 @@ public class EncDecZip {
     private static final Pattern REGEX_PATTERN = Pattern.compile(REGEX_WILDCARDS);
     static enum ACTION { NONE, ZIP, UNZIP};
     static enum OPTION { PASSWORD_GEN, PASSWORD, PASSWORD_FILE};
+    private String outputText;
     
     static {
         LOG_LEVEL.put("ERROR", Level.SEVERE);
@@ -114,7 +115,15 @@ public class EncDecZip {
                         return;
                     case "-u":
                         action = ACTION.UNZIP;
-                        break;                    
+                        break; 
+                    case "-o":
+                        i++;
+                        if(i < args.length) {
+                            outputText = args[i];
+                        } else {
+                            throw new ProcessingException(Level.WARNING, "Need a text value", true);
+                        }
+                        break;
                     case "-z":
                         action = ACTION.ZIP;
                         break;                    
@@ -162,7 +171,7 @@ public class EncDecZip {
                 } else if(outFilePath == null) {
                     outFilePath = args[i];                     
                 }else {
-                    throw new ProcessingException(Level.WARNING, "Need in and out paths already set", true);
+                    throw new ProcessingException(Level.WARNING, "In and out paths already set", true);
                 }
             }
         }
@@ -184,6 +193,9 @@ public class EncDecZip {
                 }                
                 break;
             case ZIP:
+                if(outFilePath == null) {
+                    throw new ProcessingException(Level.WARNING, "No output path supplied", true);
+                }
                 if(LOG.isLoggable(Level.FINE)) {
                     LOG.log(Level.FINE, "About to add files to zip file");
                 }
@@ -200,6 +212,9 @@ public class EncDecZip {
                 if(LOG.isLoggable(Level.FINE)) {
                     LOG.log(Level.FINE, "About to extract files from zip file");
                 }
+                if(outFilePath == null) {
+                    throw new ProcessingException(Level.WARNING, "No output path supplied", true);
+                }
                 try{
                     extractAllFiles(option == OPTION.PASSWORD, password, 
                                     inFilePath,
@@ -208,11 +223,9 @@ public class EncDecZip {
                     throw new ProcessingException(Level.SEVERE, e.getMessage());
                 }
                 break;
-        }
-        
-        
-        if(LOG.isLoggable(Level.FINE)) {
-            LOG.log(Level.FINE, "o.O");
+        }                
+        if(LOG.isLoggable(Level.INFO)) {
+            LOG.log(Level.INFO, "\u00F5.\u00D4");
         }
     }
     
@@ -487,6 +500,11 @@ public class EncDecZip {
         if(LOG.isLoggable(Level.INFO)) {
             StringBuilder sbLog = new StringBuilder("Zip file path: ");
             sbLog.append(zipFilePathOut);
+            LOG.log(Level.INFO, sbLog.toString());
+        }
+        if(StringUtils.isNotBlank(outputText)) {
+            StringBuilder sbLog = new StringBuilder("Output text: ");
+            sbLog.append(outputText).append(zipFileName);
             LOG.log(Level.INFO, sbLog.toString());
         }
         if(LOG.isLoggable(Level.FINE)) {
