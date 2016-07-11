@@ -41,3 +41,10 @@ A password file can be generated using the **-pg** option.
 +------------------------------------------------------------------------------'
 ```
 
+## No Warranty
+The tool is distributed in the hope that it will be useful, but without any warranty. It is provided "as is" without warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of fitness for a particular purpose. The entire risk as to the quality and performance of the program is with you. Should the program prove defective, you assume the cost of all necessary servicing, repair or correction. 
+In no event unless required by applicable law the author will be liable to you for damages, including any general, special, incidental or consequential damages arising out of the use or inability to use the program (including but not limited to loss of data or data being rendered inaccurate or losses sustained by you or third parties or a failure of the program to operate with any other programs), even if the author has been advised of the possibility of such damages. 
+
+
+### PS
+There is no back-door, so, *sorry for you*, if you lose the password file or forget the password.
