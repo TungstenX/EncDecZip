@@ -1,5 +1,19 @@
 # EncDecZip
 Encrypt Decrypt Zip File Tool
+This tool allows you to create an encrypted zip file, using the **-z** option, it does not encrypt already created zip files (although you can supply your zip file as an input source file and create a new encrypted zip file). It also allows you to decrypt a file, using the **-u** option, that was encrypted *by this tool*.  You can supply a password, using the **-p** option, or a password file, using the **-pf** option, for both encrypting and decrypting.  
+
+You should use the same password mechanism to decrypt the zip file that was used to encrypt is, e.g. if you used **-p** to encrypt the file then you *must* use **-p** to decrypt the file.
+
+A password file can be generated using the **-pg** option.
+
+## Examples
+|What                               |How|
+|---|---|
+| Generate a password file | java -jar EncDecZip -pg /path/to/save/pasword/file |
+| Create encrypted zip file| java -jar EncDecZip -z -pf /path/to/pasword/file /path/to/input/dir/ /path/to/output/file.zip |
+| Decrypt and unzip |  java -jar EncDecZip -u -pf /path/to/pasword/file /path/to/input/file.zip /path/to/output/dir/ |
+
+## Usage
 ```	
               ____  _  _  ___  ____  ____  ___  ____  ____  ____               
              ( ___)( \( )/ __)(  _ \( ___)/ __)(_   )(_  _)(  _ \              
